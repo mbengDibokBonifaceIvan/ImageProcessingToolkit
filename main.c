@@ -359,27 +359,30 @@ Image applyHighPassFilter(Image img, int filterType, float threshold) {
     return gradient;
 }
 
-int main() {
+//Menu
+void showMenu(void) {
+    printf("\n=== MENU DE TRAITEMENT D'IMAGES ===\n");
+    printf("1. Addition d'images\n");
+    printf("2. Soustraction d'images\n");
+    printf("3. Modification du contraste\n");
+    printf("4. Filtre passe-bas\n");
+    printf("5. Filtre passe-haut\n");
+    printf("6. Ajustement de la luminosité\n");
+    printf("7. Seuillage\n");
+    printf("8. Redimensionnement(Zoom avant)\n");
+    printf("9. Redimensionnement(Zoom arrière)\n");
+    printf("10. Transformée de Hough\n");
+    printf("11. Binarisation (méthode d'Otsu)\n");
+    printf("0. Quitter\n");
+}
+
+// Fonction principale de traitement
+void processImages(void) {
+
     // Lire les images PGM
     Image img1 = readPGM("Assets/lena.512.pgm");
     Image img2 = readPGM("Assets/cristaux.512.pgm");
     Image img = readPGM("Assets/lena.512.pgm");
-    int brightness_adjustment = 50; // Vous pouvez ajuster la luminosité en changeant cette valeur
-    Image img_seuillage = readPGM("Assets/lena.512.pgm");
-    int threshold_value = 128; // Vous pouvez ajuster le seuil en changeant cette valeur
-    Image img_zoom_in = readPGM("Assets/lena.512.pgm");
-    int newWidth = img.width * 2; // Zoom in (double la largeur)
-    int newHeight = img.height * 2; // Zoom in (double la hauteur)
-    Image img_zoomout = readPGM("Assets/lena.512.pgm");
-    int newWidth2= img.width / 2; // Zoom out (divise la largeur par 2)
-    int newHeight2 = img.height / 2; // Zoom out (divise la hauteur par 2)
-    Image img_houg = readPGM("Assets/pentagone.1024.pgm"); // Supposons que vous avez une image binaire d'arêtes
-    Image accumulator;
-    Image img_niveau_de_gris = readPGM("Assets/boat.512.pgm"); // Charger une image en niveaux de gris
-    int threshold = otsuThreshold(img_niveau_de_gris); // Trouver le seuil optimal avec la méthode d'Otsu
-
-
-
 
     // Vérifier que les images ont la même taille
     if (img1.width != img2.width || img1.height != img2.height) {
@@ -387,118 +390,127 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    // Addition des images
-    Image result_add = addImages(img1, img2);
-    writePGM("Resultats/result_addition.pgm", result_add);
+    int choice;
+   
+    do {
+        showMenu();
+        printf("\nChoisissez une option (0-10) : ");
+        scanf("%d", &choice);
 
-    // Soustraction des images
-    Image result_subtract = subtractImages(img1, img2);
-    writePGM("Resultats/result_subtraction.pgm", result_subtract);
+        if (choice == 0) break;
 
-    // Ajustement de la luminosité
-    Image result_brightness = adjustBrightness(img, brightness_adjustment);
-    writePGM("Resultats/result_brightness.pgm", result_brightness);
+        switch(choice) {
+            case 1: {
+                // Addition d'images
+                Image result = addImages(img1, img2);
+                writePGM("Resultats/resultat_addition.pgm", result);
+                free(result.data);
+                break;
+            }
+            case 2: {
+                // Soustraction d'images
+                Image result = subtractImages(img1, img2);
+                writePGM("Resultats/resultat_soustraction.pgm", result);
+                free(result.data);
+                break;
+            }
+            case 3: {
+                // Modification du contraste
+                float contrast = 1.5; // Vous pouvez ajuster le contraste en changeant cette valeur
+                Image result = modifyContrast(img, contrast);
+                writePGM("Resultats/resultat_contraste.pgm", result);
+                free(result.data);
+                break;
+            }
+            case 4: {
+                // Filtre passe-bas
+                int filterType, filterSize;
+                printf("Choisissez le type de filtre (1: Moyenneur, 2: Gaussien) : ");
+                scanf("%d", &filterType);
+                printf("Entrez la taille du filtre ou la variance (selon le type) : ");
+                scanf("%d", &filterSize);
 
-    // Seuillage de l'image
-     Image result_threshold = thresholdImage(img_seuillage, threshold_value);
-    writePGM("Resultats/result_threshold.pgm", result_threshold);
+                Image result = applyLowPassFilter(img1, filterType, filterSize);
+                writePGM("Resultats/resultat_filtre_bas.pgm", result);
+                free(result.data);
+                break;
+            }
+            case 5: {
+                // Filtre passe-haut
+                int highfilterType;
+                float highthreshold;
+                printf("Choisissez le type de filtre (1: Prewitt, 2: Roberts, 3: Laplacien) : ");
+                scanf("%d", &highfilterType);
+                printf("Entrez la valeur du seuil (choisir entre 1 et 10): ");
+                scanf("%f", &highthreshold);
 
-    // Redimensionnement de l'image
-    Image result_zoomin = resizeImage(img, newWidth, newHeight);
-    writePGM("Resultats/result_zoom_in.pgm", result_zoomin);
-    Image result_zoomout = resizeImage(img, newWidth2, newHeight2);
-    writePGM("Resultats/result_zoom_out.pgm", result_zoomout);
+                Image result = applyHighPassFilter(img1, highfilterType, highthreshold);
+                writePGM("Resultats/resultat_filtre_haut.pgm", result);
+                free(result.data);
+                break;
+            }
+            case 6: {
+                // Ajustement de la luminosité
+                int brightness_adjustment = 50; // Vous pouvez ajuster la luminosité en changeant cette valeur
+                Image result = adjustBrightness(img, brightness_adjustment);
+                writePGM("Resultats/result_brightness.pgm", result);
+                free(result.data);
+                break;
+            }
+            case 7: {
+                // Seuillage de l'image
+                int threshold_value = 128; // Vous pouvez ajuster le seuil en changeant cette valeur
+                Image result = thresholdImage(img, threshold_value);
+                writePGM("Resultats/result_threshold.pgm", result);
+                free(result.data);
+                break;
+            }
+            case 8: {
+                // Redimensionnement de l'image
+                int newWidth = img.width * 2; // Zoom in (double la largeur)
+                int newHeight = img.height * 2; // Zoom in (double la hauteur)
+                Image result = resizeImage(img, newWidth, newHeight);
+                writePGM("Resultats/result_zoom_in.pgm", result);
+                free(result.data);
+                break;
+            }
+            case 9: {
+                // Redimensionnement de l'image
+                int newWidth = img.width / 2; // Zoom out (moitié la largeur)
+                int newHeight = img.height / 2; // Zoom out (moitié la hauteur)
+                Image result = resizeImage(img, newWidth, newHeight);
+                writePGM("Resultats/result_zoom_out.pgm", result);
+                free(result.data);
+                break;
+            }
+            case 10: {
+                // Transformée de Hough
+                Image accumulator;
+                houghTransform(img, &accumulator);
+                writePGM("Resultats/result_hough.pgm", accumulator);
+                free(accumulator.data);
+                break;
+            }
+            case 11: {
+                // Binarisation (méthode d'Otsu)
+                int threshold = otsuThreshold(img); // Trouver le seuil optimal avec la méthode d'Otsu
+                Image result = thresholdImage(img, threshold);
+                writePGM("Resultats/result_binarisation.pgm", result);
+                free(result.data);
+                break;
+            }
+            default:
+                printf("Option invalide. Veuillez réessayer.\n");
+                break;
+                
+        }
 
-    // Transformée de Hough
-    houghTransform(img_houg, &accumulator);
-    writePGM("Resultats/result_hough.pgm", accumulator);
+     printf("\nTraitement terminé avec succès !\n");
+    } while(1);
+}
 
-    // Seuillage d'une image en niveaux de gris
-    Image result_threshold2 = binarizeImage(img_niveau_de_gris, threshold);
-    writePGM("Resultats/result_binarized.pgm", result_threshold2);
-
-
-    //Appliquons le contraste
-    float contrastFactor;
-    printf("Entrez le facteur de contraste (1 pour ne rien changer) : ");
-    if (scanf("%f", &contrastFactor) != 1) {
-        fprintf(stderr, "Erreur lors de la saisie du facteur de contraste.\n");
-        return 1; // Indique une erreur
-    }
-    Image resultcontrast = modifyContrast(img1, contrastFactor);
-    writePGM2("Resultats/result_contrast.pgm", resultcontrast);
-
-    if (resultcontrast.data == NULL) {
-        fprintf(stderr, "Erreur lors de la modification du contraste.\n");
-        return 1; // Indique une erreur
-    }
-
-    if (writePGM2("Resultats/result_contrast.pgm", resultcontrast) != 0) {
-        fprintf(stderr, "Erreur lors de l'écriture de l'image.\n");
-        return 1; // Indique une erreur
-    }
-    printf("Modification du contraste effectuée avec succès !\n");
-
-    //Appliquons le filtre passe bas
-    int filterType, filterSize;
-    printf("Choisissez le type de filtre (1: Moyenneur, 2: Gaussien) : ");
-    scanf("%d", &filterType);
-    printf("Entrez la taille du filtre ou la variance (selon le type) : ");
-    scanf("%d", &filterSize);
-
-    Image result_lowpassfilter = applyLowPassFilter(img1, filterType, filterSize);
-
-    if (writePGM2("Resultats/result_filtered.pgm", result_lowpassfilter) == 0) {
-        printf("Le filtrage a été effectué avec succès.\n");
-    } else {
-        fprintf(stderr, "Erreur lors de l'écriture de l'image filtrée.\n");
-    }
-
-    //Appliquons le filtre passe haut
-    int highfilterType;
-    float highthreshold;
-    printf("Choisissez le type de filtre (1: Prewitt, 2: Roberts, 3: Laplacien) : ");
-    scanf("%d", &highfilterType);
-    printf("Entrez la valeur du seuil : ");
-    scanf("%f", &highthreshold);
-
-    Image result_highpassfilter = applyHighPassFilter(img1, highfilterType, highthreshold);
-    // Vérification de l'écriture du fichier
-    if (writePGM2("Resultats/result_highfiltered.pgm", result_highpassfilter) == 0) {
-    printf("Le filtrage passe-haut et l'écriture de l'image ont été effectués avec succès.\n");
-    }else {
-    fprintf(stderr, "Erreur lors de l'écriture de l'image filtrée.\n");
-    }
-
-
-
-
-
-
-    // Libérer la mémoire
-    free(img1.data);
-    free(img2.data);
-    free(result_add.data);
-    free(result_subtract.data);
-    free(img.data);
-    free(result_brightness.data);
-    free(img_seuillage.data);
-    free(result_threshold.data);
-    free(img_zoom_in.data);
-    free(result_zoomin.data);
-    free(img_zoomout.data);
-    free(result_zoomout.data);
-    free(img_houg.data);
-    free(accumulator.data);
-    free(img_niveau_de_gris.data);
-    free(result_threshold2.data);
-    free(resultcontrast.data);
-    free(result_lowpassfilter.data);
-    free(result_highpassfilter.data);
-
-
-
-    printf("Le traitement des images a été réalisé avec succès!\n");
-
+int main() {
+   processImages();
     return 0;
 }
+
